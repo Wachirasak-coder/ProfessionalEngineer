@@ -1,0 +1,1200 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>สร้าง Prompt วิศวกรรม | สภาวิศวกร</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Sarabun:ital,wght@0,300;0,400;0,500;0,700;1,400&family=Kanit:wght@300;400;500;600;700&family=Courier+Prime:wght@400;700&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #0a0f1e;
+    --surface: #0f1729;
+    --surface2: #141f38;
+    --border: #1e2d4d;
+    --accent: #2563eb;
+    --accent-glow: rgba(37,99,235,0.3);
+    --gold: #f59e0b;
+    --gold-light: #fcd34d;
+    --text: #e2e8f0;
+    --text-muted: #64748b;
+    --text-dim: #94a3b8;
+    --success: #10b981;
+    --red: #ef4444;
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'Sarabun', sans-serif;
+    font-size: 16px;
+    line-height: 1.7;
+    min-height: 100vh;
+    overflow-x: hidden;
+  }
+
+  /* Animated bg grid */
+  body::before {
+    content: '';
+    position: fixed;
+    inset: 0;
+    background-image:
+      linear-gradient(rgba(37,99,235,0.04) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(37,99,235,0.04) 1px, transparent 1px);
+    background-size: 40px 40px;
+    pointer-events: none;
+    z-index: 0;
+  }
+
+  body::after {
+    content: '';
+    position: fixed;
+    top: -40%;
+    left: -20%;
+    width: 70%;
+    height: 70%;
+    background: radial-gradient(ellipse, rgba(37,99,235,0.08) 0%, transparent 60%);
+    pointer-events: none;
+    z-index: 0;
+    animation: float 12s ease-in-out infinite alternate;
+  }
+
+  @keyframes float {
+    from { transform: translate(0,0) scale(1); }
+    to { transform: translate(5%, 8%) scale(1.1); }
+  }
+
+  .container {
+    max-width: 960px;
+    margin: 0 auto;
+    padding: 0 24px 80px;
+    position: relative;
+    z-index: 1;
+  }
+
+  /* Header */
+  header {
+    padding: 48px 0 40px;
+    text-align: center;
+    position: relative;
+  }
+
+  .badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    background: rgba(245,158,11,0.1);
+    border: 1px solid rgba(245,158,11,0.3);
+    color: var(--gold-light);
+    font-size: 12px;
+    font-weight: 600;
+    letter-spacing: 0.12em;
+    padding: 6px 16px;
+    border-radius: 100px;
+    margin-bottom: 20px;
+    font-family: 'Kanit', sans-serif;
+  }
+
+  .badge::before {
+    content: '';
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    background: var(--gold);
+    animation: pulse 2s ease-in-out infinite;
+  }
+
+  @keyframes pulse {
+    0%,100% { opacity: 1; transform: scale(1); }
+    50% { opacity: 0.4; transform: scale(0.7); }
+  }
+
+  h1 {
+    font-family: 'Kanit', sans-serif;
+    font-size: clamp(28px, 5vw, 48px);
+    font-weight: 600;
+    line-height: 1.2;
+    letter-spacing: -0.02em;
+    margin-bottom: 16px;
+    background: linear-gradient(135deg, #fff 30%, #93c5fd 70%, var(--gold-light) 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+  }
+
+  .subtitle {
+    color: var(--text-dim);
+    font-size: 17px;
+    max-width: 520px;
+    margin: 0 auto;
+  }
+
+  /* Steps indicator */
+  .steps-nav {
+    display: flex;
+    justify-content: center;
+    gap: 0;
+    margin: 40px 0 32px;
+    position: relative;
+  }
+
+  .steps-nav::before {
+    content: '';
+    position: absolute;
+    top: 16px;
+    left: 50%;
+    transform: translateX(-50%);
+    width: calc(100% - 100px);
+    height: 2px;
+    background: var(--border);
+    z-index: 0;
+  }
+
+  .step-item {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 8px;
+    z-index: 1;
+    cursor: pointer;
+    padding: 0 28px;
+  }
+
+  .step-circle {
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    border: 2px solid var(--border);
+    background: var(--surface);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 13px;
+    font-weight: 700;
+    font-family: 'Kanit', sans-serif;
+    color: var(--text-muted);
+    transition: all 0.3s ease;
+  }
+
+  .step-item.active .step-circle {
+    border-color: var(--accent);
+    background: var(--accent);
+    color: #fff;
+    box-shadow: 0 0 20px var(--accent-glow);
+  }
+
+  .step-item.done .step-circle {
+    border-color: var(--success);
+    background: var(--success);
+    color: #fff;
+  }
+
+  .step-item.done .step-circle::before { content: '✓'; font-size: 14px; }
+
+  .step-label {
+    font-size: 12px;
+    color: var(--text-muted);
+    font-family: 'Kanit', sans-serif;
+    white-space: nowrap;
+    transition: color 0.3s;
+  }
+
+  .step-item.active .step-label { color: var(--text); }
+
+  /* Cards */
+  .card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 16px;
+    padding: 32px;
+    margin-bottom: 20px;
+    position: relative;
+    overflow: hidden;
+    transition: border-color 0.3s;
+  }
+
+  .card::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 0; right: 0;
+    height: 3px;
+    background: linear-gradient(90deg, var(--accent), var(--gold));
+    opacity: 0;
+    transition: opacity 0.3s;
+  }
+
+  .card:focus-within::before { opacity: 1; }
+
+  .card-header {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin-bottom: 24px;
+  }
+
+  .card-icon {
+    width: 40px;
+    height: 40px;
+    border-radius: 10px;
+    background: rgba(37,99,235,0.15);
+    border: 1px solid rgba(37,99,235,0.3);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 18px;
+    flex-shrink: 0;
+  }
+
+  .card-title {
+    font-family: 'Kanit', sans-serif;
+    font-size: 18px;
+    font-weight: 600;
+    color: #fff;
+  }
+
+  .card-desc {
+    font-size: 14px;
+    color: var(--text-muted);
+    margin-top: 2px;
+  }
+
+  /* Form elements */
+  .form-group {
+    margin-bottom: 20px;
+  }
+
+  label {
+    display: block;
+    font-size: 14px;
+    font-weight: 600;
+    color: var(--text-dim);
+    margin-bottom: 8px;
+    font-family: 'Kanit', sans-serif;
+    letter-spacing: 0.02em;
+  }
+
+  label span.req {
+    color: var(--red);
+    margin-left: 4px;
+  }
+
+  input[type="text"], select, textarea {
+    width: 100%;
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 12px 16px;
+    color: var(--text);
+    font-family: 'Sarabun', sans-serif;
+    font-size: 15px;
+    outline: none;
+    transition: border-color 0.2s, box-shadow 0.2s;
+    appearance: none;
+  }
+
+  input[type="text"]:focus, select:focus, textarea:focus {
+    border-color: var(--accent);
+    box-shadow: 0 0 0 3px var(--accent-glow);
+  }
+
+  select {
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%2364748b' stroke-width='2'%3E%3Cpolyline points='6 9 12 15 18 9'%3E%3C/polyline%3E%3C/svg%3E");
+    background-repeat: no-repeat;
+    background-position: right 14px center;
+    padding-right: 40px;
+    cursor: pointer;
+  }
+
+  textarea { resize: vertical; min-height: 80px; }
+
+  .form-row {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 16px;
+  }
+
+  /* Checkboxes */
+  .checkbox-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+    gap: 10px;
+  }
+
+  .check-item {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 10px 14px;
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    cursor: pointer;
+    transition: all 0.2s;
+    user-select: none;
+  }
+
+  .check-item:hover { border-color: rgba(37,99,235,0.4); }
+
+  .check-item input[type="checkbox"] {
+    width: 18px; height: 18px;
+    accent-color: var(--accent);
+    cursor: pointer;
+    flex-shrink: 0;
+  }
+
+  .check-item label {
+    cursor: pointer;
+    font-size: 14px;
+    font-family: 'Sarabun', sans-serif;
+    color: var(--text-dim);
+    margin: 0;
+    font-weight: 400;
+  }
+
+  .check-item:has(input:checked) {
+    border-color: var(--accent);
+    background: rgba(37,99,235,0.08);
+  }
+
+  .check-item:has(input:checked) label { color: #93c5fd; }
+
+  /* Hint text */
+  .hint {
+    font-size: 12px;
+    color: var(--text-muted);
+    margin-top: 6px;
+    display: flex;
+    align-items: flex-start;
+    gap: 6px;
+  }
+
+  .hint::before { content: 'ℹ'; flex-shrink: 0; margin-top: 1px; }
+
+  /* Action buttons */
+  .actions {
+    display: flex;
+    justify-content: center;
+    gap: 12px;
+    margin-top: 32px;
+    flex-wrap: wrap;
+  }
+
+  .btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: 14px 32px;
+    border-radius: 12px;
+    font-family: 'Kanit', sans-serif;
+    font-size: 16px;
+    font-weight: 500;
+    cursor: pointer;
+    border: none;
+    outline: none;
+    transition: all 0.2s;
+  }
+
+  .btn-primary {
+    background: var(--accent);
+    color: #fff;
+    box-shadow: 0 4px 20px var(--accent-glow);
+  }
+
+  .btn-primary:hover {
+    background: #1d4ed8;
+    transform: translateY(-1px);
+    box-shadow: 0 6px 30px rgba(37,99,235,0.5);
+  }
+
+  .btn-ghost {
+    background: transparent;
+    color: var(--text-dim);
+    border: 1px solid var(--border);
+  }
+
+  .btn-ghost:hover {
+    background: var(--surface2);
+    color: var(--text);
+    border-color: #334155;
+  }
+
+  /* Output section */
+  #output-section {
+    display: none;
+    animation: fadeSlideUp 0.4s ease;
+  }
+
+  @keyframes fadeSlideUp {
+    from { opacity: 0; transform: translateY(24px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+
+  .output-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 20px;
+    flex-wrap: wrap;
+    gap: 12px;
+  }
+
+  .output-title {
+    font-family: 'Kanit', sans-serif;
+    font-size: 20px;
+    font-weight: 600;
+    color: #fff;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+
+  .output-title .dot {
+    width: 8px; height: 8px;
+    border-radius: 50%;
+    background: var(--success);
+    animation: pulse 2s ease-in-out infinite;
+  }
+
+  .copy-actions {
+    display: flex;
+    gap: 8px;
+    flex-wrap: wrap;
+  }
+
+  .btn-copy {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: 10px 20px;
+    border-radius: 10px;
+    font-family: 'Kanit', sans-serif;
+    font-size: 14px;
+    font-weight: 500;
+    cursor: pointer;
+    border: none;
+    outline: none;
+    transition: all 0.2s;
+  }
+
+  .btn-copy-main {
+    background: var(--gold);
+    color: #000;
+  }
+
+  .btn-copy-main:hover {
+    background: var(--gold-light);
+    transform: translateY(-1px);
+  }
+
+  .btn-copy-secondary {
+    background: var(--surface2);
+    color: var(--text);
+    border: 1px solid var(--border);
+  }
+
+  .btn-copy-secondary:hover {
+    border-color: #334155;
+    background: #1e293b;
+  }
+
+  /* Output box */
+  .output-box {
+    background: #060c1a;
+    border: 1px solid var(--border);
+    border-radius: 14px;
+    padding: 28px;
+    position: relative;
+    overflow: hidden;
+    font-family: 'Sarabun', sans-serif;
+    font-size: 15px;
+    line-height: 1.8;
+    color: var(--text);
+    white-space: pre-wrap;
+    max-height: 620px;
+    overflow-y: auto;
+    scrollbar-width: thin;
+    scrollbar-color: var(--border) transparent;
+  }
+
+  .output-box::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 0; right: 0;
+    height: 40px;
+    background: linear-gradient(180deg, #060c1a, transparent);
+    pointer-events: none;
+    z-index: 2;
+    opacity: 0;
+  }
+
+  .output-box::-webkit-scrollbar { width: 6px; }
+  .output-box::-webkit-scrollbar-track { background: transparent; }
+  .output-box::-webkit-scrollbar-thumb { background: var(--border); border-radius: 3px; }
+
+  /* Prompt formatting */
+  .output-box .section-header {
+    color: var(--gold-light);
+    font-family: 'Kanit', sans-serif;
+    font-weight: 600;
+    font-size: 16px;
+    display: block;
+    margin: 20px 0 8px;
+    border-left: 3px solid var(--gold);
+    padding-left: 12px;
+  }
+
+  .output-box .section-header:first-child { margin-top: 0; }
+
+  .output-box .subsection {
+    color: #93c5fd;
+    font-family: 'Kanit', sans-serif;
+    font-weight: 500;
+  }
+
+  /* Toast */
+  .toast {
+    position: fixed;
+    bottom: 32px;
+    right: 32px;
+    background: var(--success);
+    color: #fff;
+    padding: 14px 24px;
+    border-radius: 12px;
+    font-family: 'Kanit', sans-serif;
+    font-size: 15px;
+    font-weight: 500;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    box-shadow: 0 8px 32px rgba(16,185,129,0.4);
+    z-index: 1000;
+    transform: translateY(80px);
+    opacity: 0;
+    transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+    pointer-events: none;
+  }
+
+  .toast.show {
+    transform: translateY(0);
+    opacity: 1;
+  }
+
+  /* Section divider */
+  .section-divider {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    margin: 32px 0 24px;
+  }
+
+  .section-divider::before, .section-divider::after {
+    content: '';
+    flex: 1;
+    height: 1px;
+    background: var(--border);
+  }
+
+  .section-divider-text {
+    font-family: 'Kanit', sans-serif;
+    font-size: 13px;
+    color: var(--text-muted);
+    white-space: nowrap;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+  }
+
+  /* Progress bar */
+  .progress-bar {
+    height: 3px;
+    background: var(--border);
+    border-radius: 100px;
+    margin-bottom: 32px;
+    overflow: hidden;
+  }
+
+  .progress-fill {
+    height: 100%;
+    background: linear-gradient(90deg, var(--accent), var(--gold));
+    border-radius: 100px;
+    width: 0%;
+    transition: width 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+  }
+
+  /* Responsive */
+  @media (max-width: 640px) {
+    .form-row { grid-template-columns: 1fr; }
+    .card { padding: 20px; }
+    .steps-nav { gap: 0; }
+    .step-item { padding: 0 16px; }
+    .step-label { display: none; }
+  }
+
+  /* AI Platform tabs */
+  .ai-tabs {
+    display: flex;
+    gap: 8px;
+    margin-bottom: 16px;
+    flex-wrap: wrap;
+  }
+
+  .ai-tab {
+    padding: 7px 18px;
+    border-radius: 8px;
+    font-size: 13px;
+    font-family: 'Kanit', sans-serif;
+    font-weight: 500;
+    cursor: pointer;
+    border: 1px solid var(--border);
+    background: var(--surface2);
+    color: var(--text-muted);
+    transition: all 0.2s;
+  }
+
+  .ai-tab.selected {
+    background: rgba(37,99,235,0.15);
+    border-color: var(--accent);
+    color: #93c5fd;
+  }
+
+  /* Char counter */
+  .char-count {
+    font-size: 12px;
+    color: var(--text-muted);
+    text-align: right;
+    margin-top: 6px;
+  }
+</style>
+</head>
+<body>
+
+<div class="container">
+
+  <!-- Header -->
+  <header>
+    <div class="badge">⚡ วิศวกรรมไฟฟ้า (กำลัง)</div>
+    <h1>สร้าง Prompt<br>สำหรับสภาวิศวกร</h1>
+    <p class="subtitle">สร้าง Prompt หัวข้อที่ 9 สำหรับรายงานผลงานดีเด่น<br>เพื่อเลื่อนระดับ <strong>สามัญวิศวกรไฟฟ้า (กำลัง)</strong></p>
+  </header>
+
+  <!-- Steps -->
+  <div class="steps-nav">
+    <div class="step-item active" id="step1-nav">
+      <div class="step-circle">1</div>
+      <div class="step-label">ข้อมูลโครงการ</div>
+    </div>
+    <div class="step-item" id="step2-nav">
+      <div class="step-circle">2</div>
+      <div class="step-label">ปรับแต่งเนื้อหา</div>
+    </div>
+    <div class="step-item" id="step3-nav">
+      <div class="step-circle">3</div>
+      <div class="step-label">รับ Prompt</div>
+    </div>
+  </div>
+
+  <!-- Progress -->
+  <div class="progress-bar">
+    <div class="progress-fill" id="progress" style="width:33%"></div>
+  </div>
+
+  <!-- STEP 1: Project Info -->
+  <div id="step1">
+
+    <div class="card">
+      <div class="card-header">
+        <div class="card-icon">🏗️</div>
+        <div>
+          <div class="card-title">ข้อมูลโครงการวิศวกรรม</div>
+          <div class="card-desc">กรอกข้อมูลพื้นฐานเพื่อให้ Prompt มีความจำเพาะกับโครงการของคุณ</div>
+        </div>
+      </div>
+
+      <div class="form-group">
+        <label>ชื่อโครงการ (Project Name) <span class="req">*</span></label>
+        <input type="text" id="projectName" placeholder="เช่น โครงการออกแบบระบบไฟฟ้าอาคารสำนักงาน ขนาด 2 MVA">
+      </div>
+
+      <div class="form-row">
+        <div class="form-group">
+          <label>ประเภทโครงการ <span class="req">*</span></label>
+          <select id="projectType">
+            <option value="">-- เลือกประเภท --</option>
+            <option value="ระบบไฟฟ้าอาคาร/โรงงาน">ระบบไฟฟ้าอาคาร / โรงงานอุตสาหกรรม</option>
+            <option value="สถานีไฟฟ้าย่อย">ออกแบบสถานีไฟฟ้าย่อย (Substation)</option>
+            <option value="ระบบโซลาร์เซลล์">ระบบพลังงานแสงอาทิตย์ (Solar PV/Farm)</option>
+            <option value="โรงไฟฟ้า">ก่อสร้าง/บำรุงรักษาโรงไฟฟ้า</option>
+            <option value="ระบบสายส่งไฟฟ้า">ระบบสายส่งและสายจำหน่าย</option>
+            <option value="ระบบ EV Charging">ระบบสถานีชาร์จยานยนต์ไฟฟ้า (EV Charging)</option>
+            <option value="ระบบพลังงานสำรอง">ระบบพลังงานสำรอง (UPS/Battery/Generator)</option>
+            <option value="ระบบป้องกันฟ้าผ่า">ระบบป้องกันฟ้าผ่าและการต่อลงดิน</option>
+            <option value="ระบบแสงสว่าง">ออกแบบระบบแสงสว่าง (Lighting Design)</option>
+            <option value="other">อื่นๆ (ระบุเอง)</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label>ขนาด / กำลัง / แรงดัน</label>
+          <input type="text" id="projectSpec" placeholder="เช่น 2 MVA, 115 kV, 500 kWp">
+        </div>
+      </div>
+
+      <div id="projectTypeOther" style="display:none;" class="form-group">
+        <label>ระบุประเภทโครงการ</label>
+        <input type="text" id="projectTypeCustom" placeholder="ระบุประเภทโครงการของคุณ">
+      </div>
+
+      <div class="form-group">
+        <label>ปัญหาหลักที่โครงการต้องแก้ไข</label>
+        <textarea id="problemStatement" placeholder="เช่น ระบบไฟฟ้าเดิมมีความเชื่อถือได้ต่ำ เกิดไฟดับบ่อยครั้ง กระทบกระบวนการผลิต และมีพิกัดความสามารถไม่เพียงพอต่อการขยายโรงงานในอนาคต"></textarea>
+      </div>
+
+    </div>
+
+    <div class="card">
+      <div class="card-header">
+        <div class="card-icon">📐</div>
+        <div>
+          <div class="card-title">มาตรฐานและหน่วยงานที่เกี่ยวข้อง</div>
+          <div class="card-desc">เลือกมาตรฐานที่คุณอ้างอิงในการออกแบบ</div>
+        </div>
+      </div>
+
+      <div class="checkbox-grid">
+        <label class="check-item">
+          <input type="checkbox" name="standards" value="มาตรฐาน วสท. (EIT)"> 
+          <label>มาตรฐาน วสท. (EIT)</label>
+        </label>
+        <label class="check-item">
+          <input type="checkbox" name="standards" value="กฟน. (MEA)">
+          <label>กฟน. (MEA)</label>
+        </label>
+        <label class="check-item">
+          <input type="checkbox" name="standards" value="กฟภ. (PEA)">
+          <label>กฟภ. (PEA)</label>
+        </label>
+        <label class="check-item">
+          <input type="checkbox" name="standards" value="IEC">
+          <label>IEC</label>
+        </label>
+        <label class="check-item">
+          <input type="checkbox" name="standards" value="IEEE">
+          <label>IEEE</label>
+        </label>
+        <label class="check-item">
+          <input type="checkbox" name="standards" value="NFPA 70 (NEC)">
+          <label>NFPA 70 (NEC)</label>
+        </label>
+        <label class="check-item">
+          <input type="checkbox" name="standards" value="IEC 61439 (LV Switchgear)">
+          <label>IEC 61439 (Switchgear)</label>
+        </label>
+        <label class="check-item">
+          <input type="checkbox" name="standards" value="IEC 60364 (Electrical Installation)">
+          <label>IEC 60364 (Installation)</label>
+        </label>
+        <label class="check-item">
+          <input type="checkbox" name="standards" value="มาตรฐาน กฟผ.">
+          <label>มาตรฐาน กฟผ.</label>
+        </label>
+        <label class="check-item">
+          <input type="checkbox" name="standards" value="ISO 9001">
+          <label>ISO 9001</label>
+        </label>
+      </div>
+    </div>
+
+    <div class="actions">
+      <button class="btn btn-primary" onclick="goToStep2()">
+        ถัดไป: ปรับแต่งเนื้อหา
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 18 15 12 9 6"/></svg>
+      </button>
+    </div>
+
+  </div>
+
+  <!-- STEP 2: Customization -->
+  <div id="step2" style="display:none;">
+
+    <div class="card">
+      <div class="card-header">
+        <div class="card-icon">⚙️</div>
+        <div>
+          <div class="card-title">ปรับแต่งเนื้อหาหัวข้อที่ 9</div>
+          <div class="card-desc">เลือกรายละเอียดที่ต้องการให้ Prompt เน้น</div>
+        </div>
+      </div>
+
+      <div class="form-group">
+        <label>ทางเลือกทางวิศวกรรมที่เปรียบเทียบ (ใส่ทั้งหมด แยกด้วย , )</label>
+        <input type="text" id="alternatives" placeholder="เช่น Ring Main Unit, Vacuum Circuit Breaker, SF6 Circuit Breaker">
+        <div class="hint">ระบบจะสร้างตาราง Matrix Evaluation เปรียบเทียบทางเลือกเหล่านี้ให้อัตโนมัติ</div>
+      </div>
+
+      <div class="form-row">
+        <div class="form-group">
+          <label>ระยะเวลาโครงการ</label>
+          <input type="text" id="duration" placeholder="เช่น 18 เดือน, 2 ปี">
+        </div>
+        <div class="form-group">
+          <label>มูลค่าโครงการ (โดยประมาณ)</label>
+          <input type="text" id="budget" placeholder="เช่น 25 ล้านบาท">
+        </div>
+      </div>
+
+      <div class="form-group">
+        <label>บทบาทของคุณในโครงการ</label>
+        <select id="role">
+          <option value="วิศวกรออกแบบหลัก (Lead Design Engineer)">วิศวกรออกแบบหลัก (Lead Design Engineer)</option>
+          <option value="วิศวกรโครงการ (Project Engineer)">วิศวกรโครงการ (Project Engineer)</option>
+          <option value="วิศวกรผู้ควบคุมงาน (Site Engineer)">วิศวกรผู้ควบคุมงาน (Site Engineer)</option>
+          <option value="วิศวกรบำรุงรักษา (Maintenance Engineer)">วิศวกรบำรุงรักษา (Maintenance Engineer)</option>
+          <option value="ผู้จัดการโครงการ (Project Manager)">ผู้จัดการโครงการ (Project Manager)</option>
+        </select>
+      </div>
+
+      <div class="form-group">
+        <label>ความท้าทาย / ข้อจำกัดพิเศษในโครงการ (ถ้ามี)</label>
+        <textarea id="challenges" placeholder="เช่น พื้นที่ติดตั้งจำกัด, ต้องดำเนินการขณะระบบเดิมยังทำงาน (Live Line Work), งบประมาณจำกัด, ระยะเวลาก่อสร้างสั้น"></textarea>
+      </div>
+
+      <div class="section-divider">
+        <span class="section-divider-text">ตัวเลือกเพิ่มเติม</span>
+      </div>
+
+      <div class="form-group">
+        <label>AI ที่จะนำ Prompt ไปใช้</label>
+        <div class="ai-tabs" id="aiTabs">
+          <div class="ai-tab selected" onclick="selectAI(this, 'universal')">🤖 ทุก AI</div>
+          <div class="ai-tab" onclick="selectAI(this, 'claude')">Claude</div>
+          <div class="ai-tab" onclick="selectAI(this, 'chatgpt')">ChatGPT</div>
+          <div class="ai-tab" onclick="selectAI(this, 'gemini')">Gemini</div>
+          <div class="ai-tab" onclick="selectAI(this, 'grok')">Grok</div>
+        </div>
+      </div>
+
+      <div class="form-group">
+        <label>ความละเอียดของ Output</label>
+        <select id="depth">
+          <option value="standard">มาตรฐาน (เหมาะสำหรับร่างเบื้องต้น)</option>
+          <option value="detailed" selected>ละเอียดมาก (เหมาะสำหรับเอกสารสมบูรณ์)</option>
+          <option value="maximum">สูงสุด (รายละเอียดเต็มทุกหัวข้อย่อย)</option>
+        </select>
+      </div>
+
+      <div class="form-group">
+        <label>ต้องการรวมเนื้อหาพิเศษ</label>
+        <div class="checkbox-grid">
+          <label class="check-item">
+            <input type="checkbox" name="extras" value="สมการ LaTeX"> 
+            <label>สมการ LaTeX</label>
+          </label>
+          <label class="check-item">
+            <input type="checkbox" name="extras" value="Block Diagram"> 
+            <label>คำอธิบาย Block Diagram</label>
+          </label>
+          <label class="check-item">
+            <input type="checkbox" name="extras" value="การคำนวณโหลด"> 
+            <label>ตัวอย่างการคำนวณโหลด</label>
+          </label>
+          <label class="check-item">
+            <input type="checkbox" name="extras" value="การวิเคราะห์ Short Circuit"> 
+            <label>Short Circuit Analysis</label>
+          </label>
+          <label class="check-item">
+            <input type="checkbox" name="extras" value="การวิเคราะห์ความเสี่ยง"> 
+            <label>การวิเคราะห์ความเสี่ยง</label>
+          </label>
+          <label class="check-item">
+            <input type="checkbox" name="extras" value="การคำนวณ ROI"> 
+            <label>การคำนวณ ROI / ต้นทุน</label>
+          </label>
+        </div>
+      </div>
+
+    </div>
+
+    <div class="actions">
+      <button class="btn btn-ghost" onclick="goToStep1()">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="15 18 9 12 15 6"/></svg>
+        ย้อนกลับ
+      </button>
+      <button class="btn btn-primary" onclick="generatePrompt()">
+        ✨ สร้าง Prompt เดี๋ยวนี้
+      </button>
+    </div>
+
+  </div>
+
+  <!-- STEP 3: Output -->
+  <div id="step3" style="display:none;">
+
+    <div id="output-section">
+      <div class="output-header">
+        <div class="output-title">
+          <div class="dot"></div>
+          Prompt พร้อมใช้งาน
+        </div>
+        <div class="copy-actions">
+          <button class="btn-copy btn-copy-secondary" onclick="resetForm()">
+            🔄 สร้างใหม่
+          </button>
+          <button class="btn-copy btn-copy-main" onclick="copyPrompt()" id="copyBtn">
+            📋 คัดลอก Prompt
+          </button>
+        </div>
+      </div>
+
+      <div class="output-box" id="outputBox"></div>
+
+      <div style="display:flex; justify-content:space-between; align-items:center; margin-top:12px; flex-wrap:wrap; gap:8px;">
+        <div class="char-count" id="charCount"></div>
+        <button class="btn-copy btn-copy-secondary" onclick="copyPrompt()" style="font-size:13px; padding:8px 16px;">
+          📋 คัดลอก (อีกครั้ง)
+        </button>
+      </div>
+
+      <div class="card" style="margin-top:24px; background: rgba(245,158,11,0.05); border-color: rgba(245,158,11,0.2);">
+        <div style="display:flex; gap:12px; align-items:flex-start;">
+          <span style="font-size:24px; flex-shrink:0;">💡</span>
+          <div>
+            <div style="font-family:'Kanit',sans-serif; font-weight:600; color:var(--gold-light); margin-bottom:8px;">วิธีใช้ Prompt นี้ให้ได้ผลดีที่สุด</div>
+            <ol style="color:var(--text-dim); font-size:14px; line-height:1.8; padding-left:20px;">
+              <li>คัดลอก Prompt ทั้งหมดด้านบน</li>
+              <li>วางใน ChatGPT / Claude / Gemini / Grok</li>
+              <li>AI จะสร้าง Template เอกสารให้ทันที</li>
+              <li>นำผลลัพธ์ Copy ไปวางใน MS Word</li>
+              <li>เติมข้อมูลจริงในส่วน <code style="background:var(--surface2); padding:2px 6px; border-radius:4px; font-size:12px;">[ระบุ...]</code></li>
+            </ol>
+          </div>
+        </div>
+      </div>
+
+    </div>
+
+  </div>
+
+</div>
+
+<!-- Toast -->
+<div class="toast" id="toast">
+  <span>✅</span>
+  <span>คัดลอก Prompt สำเร็จแล้ว!</span>
+</div>
+
+<script>
+  let selectedAI = 'universal';
+
+  function selectAI(el, ai) {
+    document.querySelectorAll('.ai-tab').forEach(t => t.classList.remove('selected'));
+    el.classList.add('selected');
+    selectedAI = ai;
+  }
+
+  document.getElementById('projectType').addEventListener('change', function() {
+    document.getElementById('projectTypeOther').style.display = this.value === 'other' ? 'block' : 'none';
+  });
+
+  function goToStep1() {
+    document.getElementById('step1').style.display = 'block';
+    document.getElementById('step2').style.display = 'none';
+    document.getElementById('step3').style.display = 'none';
+    setActiveStep(1);
+    document.getElementById('progress').style.width = '33%';
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  }
+
+  function goToStep2() {
+    const projectName = document.getElementById('projectName').value.trim();
+    const projectType = document.getElementById('projectType').value;
+    if (!projectName) { alert('กรุณากรอกชื่อโครงการ'); return; }
+    if (!projectType) { alert('กรุณาเลือกประเภทโครงการ'); return; }
+    document.getElementById('step1').style.display = 'none';
+    document.getElementById('step2').style.display = 'block';
+    document.getElementById('step3').style.display = 'none';
+    setActiveStep(2);
+    document.getElementById('progress').style.width = '66%';
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  }
+
+  function setActiveStep(n) {
+    for (let i = 1; i <= 3; i++) {
+      const el = document.getElementById(`step${i}-nav`);
+      el.classList.remove('active', 'done');
+      if (i < n) el.classList.add('done');
+      else if (i === n) el.classList.add('active');
+      if (i < n) el.querySelector('.step-circle').innerHTML = '';
+      else el.querySelector('.step-circle').textContent = i;
+    }
+  }
+
+  function getChecked(name) {
+    return [...document.querySelectorAll(`input[name="${name}"]:checked`)].map(el => el.value);
+  }
+
+  function generatePrompt() {
+    const projectName = document.getElementById('projectName').value.trim() || '[ชื่อโครงการ]';
+    let projectType = document.getElementById('projectType').value;
+    if (projectType === 'other') projectType = document.getElementById('projectTypeCustom').value || '[ประเภทโครงการ]';
+    const projectSpec = document.getElementById('projectSpec').value.trim();
+    const problemStatement = document.getElementById('problemStatement').value.trim();
+    const alternatives = document.getElementById('alternatives').value.trim();
+    const duration = document.getElementById('duration').value.trim();
+    const budget = document.getElementById('budget').value.trim();
+    const role = document.getElementById('role').value;
+    const challenges = document.getElementById('challenges').value.trim();
+    const depth = document.getElementById('depth').value;
+    const standards = getChecked('standards');
+    const extras = getChecked('extras');
+
+    const altList = alternatives ? alternatives.split(',').map(s => s.trim()).filter(Boolean) : ['ทางเลือกที่ 1', 'ทางเลือกที่ 2', 'ทางเลือกที่ 3'];
+
+    const depthLabel = depth === 'maximum' ? 'ขั้นสูงสุด — ต้องมีรายละเอียดทุกหัวข้อย่อยอย่างสมบูรณ์ครบถ้วน ความยาวรวมหัวข้อที่ 9 ไม่ต่ำกว่า 8 หน้า A4' 
+      : depth === 'detailed' ? 'ละเอียดมาก — ขยายความทุกประเด็นพร้อมตัวอย่างการคำนวณและตาราง'
+      : 'มาตรฐาน — ครอบคลุมทุกหัวข้อย่อยตามโครงสร้างที่กำหนด';
+
+    const aiNote = selectedAI === 'claude' ? '\n⚠️ หมายเหตุสำหรับ Claude: กรุณาตอบเป็นภาษาไทยทั้งหมด และใช้ Markdown สำหรับการจัดรูปแบบ'
+      : selectedAI === 'chatgpt' ? '\n⚠️ Note for ChatGPT: Please respond entirely in Thai language with proper Markdown formatting.'
+      : selectedAI === 'gemini' ? '\n⚠️ หมายเหตุสำหรับ Gemini: ตอบเป็นภาษาไทยทั้งหมด จัดรูปแบบด้วย Markdown'
+      : '';
+
+    const standardsText = standards.length > 0 ? standards.join(', ') : 'วสท. (EIT), IEC, IEEE';
+    const extrasText = extras.length > 0 ? `\n\n📌 เนื้อหาพิเศษที่ต้องรวม:\n${extras.map(e => `• ${e}`).join('\n')}` : '';
+    const challengeText = challenges ? `\n\n🔴 ข้อจำกัดและความท้าทายพิเศษในโครงการ:\n${challenges}\n(จงสะท้อนความท้าทายเหล่านี้ในการเลือกวิธีการแก้ปัญหาที่หัวข้อ 9.3 ด้วย)` : '';
+    const specText = projectSpec ? ` ขนาด ${projectSpec}` : '';
+    const durationText = duration ? ` | ระยะเวลา: ${duration}` : '';
+    const budgetText = budget ? ` | มูลค่าโครงการ: ${budget}` : '';
+    const problemText = problemStatement ? `\n\nปัญหาหลักที่โครงการต้องแก้ไข:\n"${problemStatement}"` : '';
+
+    const prompt = `🎯 MASTER PROMPT: สร้าง Template เอกสารสภาวิศวกร หัวข้อที่ 9${aiNote}
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+📋 บทบาท (Role):
+สวมบทบาทเป็น "วุฒิวิศวกรไฟฟ้า (กำลัง)" ผู้มีประสบการณ์สูง และ Technical Writer ผู้เชี่ยวชาญการเขียนเอกสารยื่นขอเลื่อนระดับกับสภาวิศวกรแห่งประเทศไทย (วสท.)
+
+📋 คำสั่ง (Task):
+จงสร้าง Template เอกสาร MS Word ที่มีความละเอียดระดับ: ${depthLabel}
+
+สำหรับ "หัวข้อที่ 9: หลักการทางวิศวกรรม แนวทางการทำงาน และเลือกใช้วิธีการแก้ไขปัญหา" ของรายงานผลงานวิศวกรรมดีเด่น เพื่อประกอบการพิจารณาเลื่อนระดับเป็น "สามัญวิศวกรไฟฟ้า (กำลัง)"
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+📂 บริบทโครงการ (Project Context):
+• ชื่อโครงการ: ${projectName}${specText}
+• ประเภทงาน: ${projectType}${durationText}${budgetText}
+• บทบาทผู้ยื่น: ${role}
+• มาตรฐานอ้างอิงหลัก: ${standardsText}${problemText}${challengeText}${extrasText}
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+📐 ข้อกำหนดการเขียน (Writing Requirements):
+
+1. ภาษา: ภาษาไทย ทางการ วิชาการ ตามมาตรฐานภาษาเขียนวิศวกรรม
+2. รูปแบบ: Markdown พร้อม Heading 1 / Heading 2 / Heading 3 / Bullet points
+3. Placeholder: ทุกจุดที่ผู้ใช้ต้องเติมข้อมูล ให้ใช้ [ระบุ...] พร้อม Guideline อธิบายวิธีเขียน (ใช้ตัวเอียง)
+4. สมการ: ใช้รูปแบบ LaTeX — สมการแยกบรรทัดใช้ $$...$$ และสมการในบรรทัดใช้ $...$
+5. เป้าหมาย: เนื้อหาต้องน่าประทับใจกรรมการสภาวิศวกร สะท้อนความเชี่ยวชาญระดับสามัญวิศวกร
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+📑 โครงสร้างเนื้อหาบังคับ (Required Structure):
+
+# หัวข้อที่ 9: หลักการทางวิศวกรรม แนวทางการทำงาน และเลือกใช้วิธีการแก้ไขปัญหา
+
+## 9.1 หลักการและทฤษฎีทางวิศวกรรมไฟฟ้าที่เกี่ยวข้อง
+
+สร้าง Template สำหรับ:
+• ทฤษฎีและหลักการทางวิศวกรรมไฟฟ้ากำลังที่ใช้เป็นแกนหลักในโครงการ ${projectType}
+• การอ้างอิงมาตรฐาน: ${standardsText} อย่างถูกต้องตามบริบทโครงการ
+• การอธิบายกฎหมาย/ระเบียบที่บังคับใช้ (พระราชบัญญัติวิศวกร, กฎกระทรวง ฯลฯ)
+• หลักการออกแบบเพื่อความปลอดภัย (Safety by Design) ตามมาตรฐาน IEC/IEEE
+
+## 9.2 การศึกษาและเปรียบเทียบทางเลือกในการแก้ไขปัญหา
+
+สร้าง Template สำหรับ:
+• บทนำการศึกษาความเป็นไปได้ (Feasibility Study)
+• อธิบายทางเลือกแต่ละข้อ (${altList.join(' / ')}) อย่างละเอียดด้านเทคนิค
+• ตาราง Matrix Evaluation เปรียบเทียบมิติ: ความเป็นไปได้ทางเทคนิค, ความเชื่อถือได้ (Reliability), ความปลอดภัย (Safety), ความคุ้มค่า (Cost-effectiveness), ความสอดคล้องมาตรฐาน, ความยากในการบำรุงรักษา
+• บทสรุปการวิเคราะห์ Matrix พร้อมเหตุผลทางวิศวกรรมชัดเจน
+
+## 9.3 แนวทางการทำงานและการเลือกใช้วิธีการที่ดีที่สุด
+
+สร้าง Template สำหรับ:
+• เหตุผลทางวิศวกรรมในการตัดสินใจเลือกวิธีที่ดีที่สุด (อ้างอิงจาก 9.2)
+• ขั้นตอนการทำงาน (Step-by-step Methodology) ตั้งแต่ออกแบบจนถึง Commissioning
+• คุณลักษณะเฉพาะทางวิศวกรรม (Engineering Specifications) ที่กำหนดใช้
+• คำอธิบายแผนผังการทำงาน (Block Diagram / Single Line Diagram / Workflow)
+• มาตรการควบคุมคุณภาพและการทดสอบ (QC/Testing Procedures)
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+✅ เกณฑ์ตรวจสอบก่อนส่งผลลัพธ์:
+□ ทุกหัวข้อย่อย 9.1, 9.2, 9.3 มีเนื้อหาครบถ้วน
+□ มี Placeholder [ระบุ...] พร้อม Guideline ทุกจุด
+□ มีตาราง Matrix Evaluation ที่สมบูรณ์
+□ อ้างอิงมาตรฐาน ${standardsText} อย่างถูกต้อง
+□ ภาษาทางการระดับเอกสารวิชาการวิศวกรรม
+□ โครงสร้างพร้อมนำไปวางใน MS Word ได้ทันที
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+🚀 เริ่มสร้าง Template ได้เลยครับ`;
+
+    document.getElementById('step2').style.display = 'none';
+    document.getElementById('step3').style.display = 'block';
+    document.getElementById('output-section').style.display = 'block';
+    setActiveStep(3);
+    document.getElementById('progress').style.width = '100%';
+
+    const box = document.getElementById('outputBox');
+    box.textContent = prompt;
+    document.getElementById('charCount').textContent = `📊 จำนวนตัวอักษร: ${prompt.length.toLocaleString()} | คำโดยประมาณ: ${Math.round(prompt.length / 3).toLocaleString()}`;
+
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+    window.__generatedPrompt = prompt;
+  }
+
+  function copyPrompt() {
+    const prompt = window.__generatedPrompt || '';
+    if (!prompt) return;
+
+    if (navigator.clipboard && window.isSecureContext) {
+      navigator.clipboard.writeText(prompt).then(showToast).catch(fallbackCopy);
+    } else {
+      fallbackCopy();
+    }
+  }
+
+  function fallbackCopy() {
+    const ta = document.createElement('textarea');
+    ta.value = window.__generatedPrompt || '';
+    ta.style.position = 'fixed';
+    ta.style.opacity = '0';
+    document.body.appendChild(ta);
+    ta.select();
+    document.execCommand('copy');
+    document.body.removeChild(ta);
+    showToast();
+  }
+
+  function showToast() {
+    const toast = document.getElementById('toast');
+    toast.classList.add('show');
+    const btn = document.getElementById('copyBtn');
+    if (btn) { btn.textContent = '✅ คัดลอกแล้ว!'; }
+    setTimeout(() => {
+      toast.classList.remove('show');
+      if (btn) { btn.innerHTML = '📋 คัดลอก Prompt'; }
+    }, 3000);
+  }
+
+  function resetForm() {
+    document.getElementById('step3').style.display = 'none';
+    document.getElementById('step1').style.display = 'block';
+    setActiveStep(1);
+    document.getElementById('progress').style.width = '33%';
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  }
+</script>
+</body>
+</html>
